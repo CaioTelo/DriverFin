@@ -29,7 +29,12 @@ Fontes: [npm workspaces](https://docs.npmjs.com/cli/v11/using-npm/workspaces),
 ## 2. Prisma 7 e dados
 
 **Decisão:** `prisma-client` com saída em `apps/api/src/generated/prisma`,
-`moduleFormat = "cjs"` para NestJS CommonJS, `@prisma/adapter-pg` e `pg`.
+`moduleFormat = "esm"` para backend ESM compatível com Node.js 24, NestJS 11 e Prisma 7,
+`@prisma/adapter-pg` e `pg`. Usar `"type": "module"` no package.json da API,
+`module: "NodeNext"` e `moduleResolution: "NodeNext"`, preservando decorators conforme
+plan.md; gerar TypeScript com imports `.js` para execução do artefato compilado.
+Na fundação, validar `prisma generate`, build NestJS, execução de `dist/main.js` e
+build/startup da imagem Docker. CommonJS não integra a configuração aprovada da V1.
 Configuração da CLI em `apps/api/prisma.config.ts`, incluindo carregamento explícito de
 ambiente, schema, migrations, seed e URL. PrismaService único no processo.
 

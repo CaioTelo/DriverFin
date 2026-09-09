@@ -210,6 +210,16 @@ para local/teste. Fuel é enum e endpoint de leitura, sem tela administrativa. P
 usa geração explícita antes do build, adapter-pg e prisma.config.ts. CHECKs adicionais
 são SQL revisado e versionado dentro das migrations Prisma. Não usar db push em produção.
 
+Build Prisma/NestJS em ESM: definir `"type": "module"` em apps/api/package.json e
+`module: "NodeNext"` / `moduleResolution: "NodeNext"` no tsconfig da API, mantendo
+`experimentalDecorators` e `emitDecoratorMetadata` habilitados. Usar o generator
+`prisma-client` com output `../src/generated/prisma`, `moduleFormat = "esm"`,
+`generatedFileExtension = "ts"` e `importFileExtension = "js"`. Imports relativos da
+API devem usar extensão `.js`, inclusive ao importar o client gerado. Compilar o client
+junto com o Nest após `prisma generate`; preservar o package.json com tipo ESM na imagem
+final e alinhar o executor de testes ao mesmo formato. Validar build, testes e startup
+do JavaScript compilado na imagem Node 24 antes de avançar na implementação.
+
 ## Autenticação e recuperação
 
 1. Cadastro normaliza nome/e-mail, preserva senha e gera Argon2id
@@ -398,8 +408,8 @@ Incluir o projeto no portfólio somente como concluído após todos os gates da 
 
 | Risco | Tratamento/critério para avançar |
 |-------|--------------------------------|
-| Cookie ou header alterado pelo rewrite | Validar na primeira integração publicada login/refresh/logout e no-store; configuração corrigida antes de domínio financeiro. |
-| Incompatibilidade Node/Prisma 7/ESM | Fixar versões, cjs explícito, adapter-pg, generate antes de build e smoke da imagem. |
+| Cookie ou header alterado pelo rewrite | Na Fundação e Autenticação, validar localmente `/api`, rewrite, headers, cookies, no-store, build, startup e E2E. A evidência local não substitui produção: validar em Vercel/Railway na fase 10 (Deploy), sem deploy intermediário antes de US4. Corrigir falhas de cookies, rewrite, CORS ou sessão antes do smoke final e da conclusão da V1. |
+| Incompatibilidade Node/Prisma 7/ESM | Fixar versões, configuração ESM compatível com Prisma 7/NestJS conforme seção Dados e API REST, adapter-pg, generate antes de build e smoke da imagem. |
 | Corrida de autenticação | Lock User consistente, revalidação transacional, testes concorrentes; não aceitar JWT sem sessão ativa. |
 | Casas monetárias arredondadas pelo banco | DTO string estrito antes de Decimal, cálculo BigInt exato e testes de empate. |
 | Datas deslocadas pelo host/browser | @db.Date e função calendário única; datas/limites retornados pela API, testes de virada. |
