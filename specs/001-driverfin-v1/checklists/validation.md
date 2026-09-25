@@ -537,3 +537,115 @@ Nenhuma conclusão da V1, deploy ou funcionalidade de negócio é declarada aqui
 - Procedimentos preparados, ainda não executados remotamente: rollback da aplicação por
   redeploy da imagem/deployment anterior; migrations somente por correção forward com
   nova migration versionada, nunca reset ou `migrate dev` em produção.
+
+## T044–T047 — Deploy e smoke público (PASS em 2026-09-25)
+
+Esta seção substitui o bloqueio operacional anterior de T044. As comprovações externas
+abaixo foram executadas manualmente e confirmadas pelo responsável pelo deploy; nenhum
+segredo, token ou link de recuperação foi incluído nesta evidência.
+
+### T044 — Railway
+
+- API publicada com o Dockerfile versionado e PostgreSQL provisionado na Railway.
+- `DATABASE_URL`, configuração JWT, Resend e `WEB_ORIGIN` foram mantidas no secret store.
+- Pre-deploy configurado como `npm run db:deploy --workspace apps/api`; nenhuma migration
+  foi executada no build e não foi usado `migrate dev` em produção.
+- URL pública: `https://driverfin-production.up.railway.app`.
+- `GET https://driverfin-production.up.railway.app/api/health`: HTTP 200 e
+  `{"status":"ok"}`; resposta reconfirmada nesta revisão.
+- Rollback da aplicação permanece por redeploy do deployment anterior; schema evolui por
+  migration corretiva forward versionada, sem reset de produção.
+
+### T045 — Vercel
+
+- Frontend publicado em `https://driver-fin-web-beta.vercel.app`, com Root Directory
+  `apps/web`, lockfile da raiz e `API_ORIGIN` apontando para a API HTTPS da Railway.
+- `WEB_ORIGIN` foi ajustada para a origem canônica da Vercel; rewrite `/api`, login,
+  sessão, refresh/reload e logout foram validados em produção.
+- As correções necessárias de engine Node/npm, lockfile e dependência `dotenv` da web
+  permanecem versionadas. Build, typecheck e lint passaram depois dessas correções.
+
+### T046 — Resend
+
+- `RESEND_API_KEY` real e `RESEND_FROM` verificado foram configurados fora do Git.
+- A recuperação foi solicitada pela aplicação publicada; o e-mail real foi recebido, o
+  link abriu na origem correta, a senha foi alterada e o login com a nova senha passou.
+- Token/link de recuperação não foi registrado nesta evidência.
+
+### T047 — Smoke público
+
+- PASS manual para cadastro, login, logout, refresh/reload, recuperação, perfil, veículo,
+  CRUD de ganhos, CRUD de despesas, dashboard, filtros Hoje/Semana/Mês, oito indicadores,
+  três gráficos, últimos lançamentos e persistência.
+- Frontend, API e health públicos passaram por HTTPS. Fluxos mobile e desktop foram
+  validados. Esta revisão não repetiu a bateria manual já confirmada.
+
+## T048 — README final (PASS em 2026-09-25)
+
+- `readme.md` foi renomeado para `README.md` e reescrito para refletir somente a V1 real.
+- O documento contém visão geral, problema/solução, funcionalidades, stack, arquitetura,
+  execução local, deploy, decisões, Backlog V2, aviso constitucional e URLs públicas.
+- Cinco screenshots reais da aplicação publicada foram capturados com conta de
+  demonstração isolada e dados fictícios em `docs/screenshots/`: login, dashboard
+  desktop, dashboard mobile, ganhos e despesas. Todas as imagens foram inspecionadas.
+
+## T049 — Checkout limpo e segurança (PASS em 2026-09-25)
+
+Validação executada em clone local isolado em `/tmp`, com um commit temporário contendo
+o estado final do README/screenshots. O clone permaneceu limpo após a execução. Foi usado
+PostgreSQL 17.11 temporário em `tmpfs`, porta 55433, com bancos descartáveis `driverfin`
+e `driverfin_test`; o container foi removido ao final.
+
+Comandos e resultados:
+
+- `npm ci`: PASS, 1064 pacotes instalados pelo lockfile. O audit do npm informou duas
+  vulnerabilidades high em dependências; não houve alteração automática ou ampliação de
+  escopo nesta tarefa documental.
+- Cópia dos três `.env.example`: PASS; arquivos reais permaneceram ignorados pelo Git.
+- `docker compose config --quiet`: PASS.
+- `npm run db:generate --workspace apps/api`: PASS, Prisma Client 7.10.0.
+- `npm run db:deploy --workspace apps/api`: PASS, migration
+  `20260924172836_initial_domain` aplicada no banco temporário.
+- `npm run db:seed --workspace apps/api`, executado duas vezes: PASS e idempotente;
+  comprovados cinco registros em `platforms` e nove em `expense_categories`.
+- `npm run format:check`, `npm run lint` e `npm run typecheck`: PASS.
+- `npm run build`: PASS para API e web. A primeira tentativa web encontrou a restrição
+  ambiental conhecida de bind do Turbopack; após remover somente `apps/web/.next` do
+  clone temporário, a reconstrução passou com 14 rotas.
+- `npm run test:unit --workspace apps/api`: 4 suítes/43 testes, PASS.
+- `npm run test:foundation --workspace apps/api`: 1 suíte/2 testes, PASS.
+- `npm run test:integration --workspace apps/api`: 9 suítes/62 testes, PASS.
+- Startup compilado: API em 3001 e web em 3000, PASS; `/login`, health direto e health
+  pelo rewrite `/api` responderam HTTP 200, com `{"status":"ok"}`.
+- `npm run test:e2e --workspace apps/web` no Playwright oficial 1.55: 42/42 PASS,
+  incluindo as quatro larguras 360/390/768/1366 px.
+- Links verificados: frontend público acessado para as capturas; API health HTTP 200;
+  repositório `https://github.com/CaioTelo/DriverFin` HTTP 200.
+
+Auditoria de segurança:
+
+- Somente `.env.example`, `apps/api/.env.example` e `apps/web/.env.example` estão
+  versionados; `.env` reais continuaram ignorados.
+- Busca nos arquivos versionados não encontrou chave Resend real, token, chave privada,
+  senha de produção, secret JWT real ou `DATABASE_URL` real. URLs e secrets encontrados
+  pertencem explicitamente a placeholders, fixtures locais ou CI descartável.
+
+## T050 — Definition of Done final (PASS em 2026-09-25)
+
+- Código/funcionalidades: PASS com as evidências T041, T042, T046 e T047 para GitHub,
+  autenticação, recuperação, perfil, veículo, CRUDs, dashboard, precisão, divisão por
+  zero, estados e isolamento.
+- Qualidade: PASS para testes, lint, typecheck, build, quatro larguras e validação manual.
+- Produção: PASS para frontend, API, PostgreSQL, HTTPS, health e recuperação real Resend.
+- Documentação: PASS para README, screenshots reais, quickstart, links, checkout limpo,
+  SC-008 e SC-009.
+- Decisão de produto: o responsável retirou explicitamente a publicação em portfólio do
+  gate da V1. Ainda não existe um portfólio a atualizar e o DriverFin deixa de ser tratado
+  apenas como peça de portfólio, passando a servir também como base para um negócio.
+  Portanto, não há link de apresentação a registrar nesta versão e nenhuma URL foi
+  inventada. Uma divulgação futura será trabalho posterior à V1.
+
+Todos os requisitos funcionais, de qualidade, produção, documentação, segurança e
+reprodutibilidade aplicáveis à V1 estão aprovados. T050 está concluída.
+
+**DriverFin V1 CONCLUÍDA**
