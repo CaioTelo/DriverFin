@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: driverfin
+          POSTGRES_PASSWORD: driverfin-ci-only
+          POSTGRES_DB: driverfin_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U driverfin -d driverfin_test"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://driverfin:driverfin-ci-only@127.0.0.1:5433/driverfin_test
+      TEST_DATABASE_URL: postgresql://driverfin:driverfin-ci-only@127.0.0.1:5433/driverfin_test
+      API_ORIGIN: http://127.0.0.1:3001
+      PORT: 3001
+      NEXT_TELEMETRY_DISABLED: 1
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Fixar npm
+        run: npm install --global npm@11.16.0
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run db:generate --workspace apps/api
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:unit --workspace apps/api
+      - run: npm run test:foundation --workspace apps/api
+      - run: npm run test:integration --workspace apps/api
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e --workspace apps/web
+      - name: Verificar transporte pela web compilada
+        shell: bash
+        run: |
+          node node_modules/next/dist/bin/next start apps/web --port 3000 > /tmp/driverfin-web.log 2>&1 &
+          web_pid=$!
+          trap 'kill "$web_pid" 2>/dev/null || true' EXIT
+          for ((attempt = 0; attempt < 30; attempt++)); do
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:3000/ > /dev/null
+          npm run test:transport --workspace apps/web
+      - name: Build da API sem acesso ao banco
+        run: docker build -f apps/api/Dockerfile -t driverfin-api:ci .
+      - name: Startup da imagem e prontidão com PostgreSQL real
+        shell: bash
+        run: |
+          docker run --detach --rm --name driverfin-api-smoke --network host \
+            --env DATABASE_URL --env PORT \
+            --env WEB_ORIGIN=http://localhost:3000 \
+            --env JWT_ACCESS_SECRET=ci-smoke-secret-with-at-least-32-bytes \
+            --env JWT_ISSUER=driverfin-api \
+            --env JWT_AUDIENCE=driverfin-web \
+            --env RESEND_API_KEY=re_ci_smoke_not_used \
+            --env RESEND_FROM=smoke@driverfin.invalid \
+            driverfin-api:ci
+          trap 'docker stop driverfin-api-smoke >/dev/null 2>&1 || true' EXIT
+          for ((attempt = 0; attempt < 30; attempt++)); do
+            if curl --fail --silent http://127.0.0.1:3001/api/health > /tmp/driverfin-health.json; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:3001/api/health > /tmp/driverfin-health.json
+          node -e "require('node:assert/strict').deepEqual(require('/tmp/driverfin-health.json'), {status:'ok'})"
+          test "$(docker exec driverfin-api-smoke id -u)" != 0
+          docker exec driverfin-api-smoke npm exec --workspace apps/api -- prisma --version

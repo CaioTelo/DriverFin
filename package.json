@@ -1,0 +1,35 @@
+{
+  "name": "driverfin",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "engines": {
+    "node": "24.16.0",
+    "npm": "11.16.0"
+  },
+  "packageManager": "npm@11.16.0",
+  "scripts": {
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "lint": "npm run lint --workspaces",
+    "typecheck": "npm run typecheck --workspaces",
+    "build": "npm run build --workspace apps/api && npm run build --workspace apps/web"
+  },
+  "overrides": {
+    "@nestjs/platform-express": {
+      "multer": "2.3.0"
+    },
+    "prisma": {
+      "mysql2": "3.24.4"
+    },
+    "@prisma/config": {
+      "deepmerge-ts": "8.0.2"
+    }
+  },
+  "devDependencies": {
+    "prettier": "3.8.3"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "name": "@driverfin/web",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "24.16.0",
+    "npm": "11.16.0"
+  },
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test:transport": "node test/rewrite-smoke.mjs",
+    "test:e2e": "playwright test",
+    "lint": "eslint . --max-warnings=0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.4",
+    "postcss": "8.5.23",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3"
+  },
+  "dependencies": {
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "recharts": "3.3.0"
+  }
+}

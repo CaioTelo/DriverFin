@@ -1,9 +1,71 @@
 # Quickstart de validação — DriverFin V1
 
-Este é o contrato de execução **a implementar** nas próximas etapas. Hoje o repositório
-contém artefatos de planejamento: os aplicativos e scripts npm abaixo ainda não existem.
-Não executar os comandos até a fundação disponibilizá-los; a entrega deve tornar este
-guia reproduzível e ajustar nomes apenas se os artefatos forem atualizados conjuntamente.
+Este guia contém o contrato da V1 inteira. A Fundação (T001–T005) está implementada;
+o status efetivamente validado consta em `checklists/validation.md`.
+Migrations, seed, autenticação e jornadas de negócio pertencem às fases seguintes.
+
+## Fundação local — T001–T005
+
+Copiar `.env.example` para `.env`, `apps/api/.env.example` para `apps/api/.env` e
+`apps/web/.env.example` para `apps/web/.env.local`. Substituir a senha local na raiz
+e nas duas URLs da API, mantendo-as alinhadas. Os arquivos reais são ignorados pelo Git.
+Carregar Node com `nvm use` e usar npm 11.16.0.
+
+```bash
+npm ci
+docker compose config --quiet
+docker compose up -d --wait db
+```
+
+Compose usa projeto `driverfin`, volume `driverfin_postgres_data`, PostgreSQL 17 e
+bind `127.0.0.1:5433`. Não reutiliza o PostgreSQL de outros projetos. Reiniciar com
+`docker compose restart db` preserva o volume; não usar `down -v` para reiniciar.
+`driverfin_test` está reservado aos testes futuros; T002 não cria modelos nem tabelas.
+
+Gerar o client com `npm run db:generate --workspace apps/api`,
+executar `npm run lint`, `npm run typecheck` e `npm run build`. Em dois terminais,
+executar `npm run dev --workspace apps/api` e `npm run dev --workspace apps/web`.
+A página inicial da Fundação fica em http://localhost:3000/; o health check fica em
+http://localhost:3000/api/health (via web) e http://localhost:3001/api/health (direto).
+O health consulta o banco sem depender de migrations. Login e demais telas não existem
+nesta fase. Não executar os comandos de migrations/seed/jornadas abaixo até suas tarefas.
+
+Para validar a Fundação, criar uma única vez o banco vazio de teste no mesmo Compose:
+
+```bash
+docker compose exec -T db createdb -U driverfin driverfin_test
+npm run test:unit --workspace apps/api
+npm run test:foundation --workspace apps/api
+```
+
+Usar o POSTGRES_USER configurado caso seja diferente de `driverfin`. Se o banco já existe,
+não recriá-lo. O smoke exige TEST_DATABASE_URL com database `driverfin_test`, executa
+somente consultas de prontidão e não aplica migrations, seed ou limpeza de dados.
+Jest executa JavaScript ESM compilado por TypeScript, com decorators preservados.
+Seu aviso de VM Modules experimental é esperado no Node; não significa falha da suíte.
+
+O teste de transporte exige API parada e web compilada iniciada com
+`npm run start --workspace apps/web`, usando API_ORIGIN local na porta 3001.
+Executar `npm run test:transport --workspace apps/web`; a fixture ocupa temporariamente
+a porta 3001 e fecha ao terminar. Ela verifica headers/cookies, método, corpo, caminho,
+query e ausência de cache, sem disponibilizar endpoints de teste na aplicação.
+
+Para validar a imagem da API em Linux, com a porta 3001 livre e o Compose saudável:
+
+```bash
+docker build -f apps/api/Dockerfile -t driverfin-api:foundation .
+docker run --rm --name driverfin-api-local --network host \
+  --env-file apps/api/.env --env NODE_ENV=production driverfin-api:foundation
+```
+
+A rede host permite usar a DATABASE_URL local em localhost:5433; em outros ambientes,
+fornecer a URL alcançável pelo container. O runtime inicia Node diretamente, como usuário
+não-root, e preserva a CLI/configuração/schema Prisma para o pre-deploy futuro.
+`db:dev` e `db:deploy` encaminham à CLI, mas modelos/migrations começam em T006;
+seed e harness de domínio começam em T007. Não declarar essas tarefas concluídas.
+
+A CI básica executa os checks da Fundação, transporte e smoke da imagem. Integração de
+domínio e Playwright serão adicionados nas tarefas previstas, sem antecipar jornadas.
 
 Referências: [plano](plan.md), [modelo](data-model.md), [REST](contracts/rest-api.md),
 [especificação e resultados de aceite](spec.md).
@@ -68,6 +130,11 @@ Preencher variáveis antes de subir as aplicações:
   JWT_ISSUER=driverfin-api, JWT_AUDIENCE=driverfin-web, RESEND_API_KEY e RESEND_FROM válidos.
 - Web: API_ORIGIN=http://localhost:3001. O browser chama /api, sem URL secreta pública.
 - Testes: TEST_DATABASE_URL apontando para driverfin_test, separado de driverfin.
+
+Em produção, `DATABASE_URL` deve usar a conexão privada do provedor e o parâmetro TLS
+exigido por ele (por exemplo, `sslmode=require` quando essa for a orientação do serviço).
+Não copiar a URL local, não desabilitar verificação TLS por código e não registrar a
+connection string em logs ou evidências.
 
 Compose define volume e healthcheck do db. O harness cria/prepara driverfin_test com
 credencial local autorizada; nunca tenta criar ou resetar banco de produção.

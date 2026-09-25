@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+coverage/
+.next/
+apps/api/.test-dist/
+apps/api/src/generated/
+package-lock.json
+.specify/
+.agents/
+.claude/
+specs/
+docs/
+*.md
