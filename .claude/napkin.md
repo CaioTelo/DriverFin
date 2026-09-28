@@ -5,22 +5,25 @@
 - Máximo de 10 itens por categoria; incluir data e ação explícita.
 
 ## Execution & Validation (Highest Priority)
-1. **[2026-09-24] Formatação é um gate reproduzível, não revisão visual opcional**
+1. **[2026-09-28] Ambiente local possui preparo e inicialização unificados**
+   Do instead: usar `npm run dev:setup` na primeira execução e `npm run dev` para subir
+   PostgreSQL, API e web com hot reload; validar health direto e via rewrite antes de entregar.
+2. **[2026-09-24] Formatação é um gate reproduzível, não revisão visual opcional**
    Do instead: escrever TypeScript/TSX legível, executar `npm run format` após alterações
    e exigir `npm run format:check` no CI antes de considerar lint/typecheck suficientes.
-2. **[2026-09-24] Smoke da imagem deve reproduzir o ambiente obrigatório de produção**
+3. **[2026-09-24] Smoke da imagem deve reproduzir o ambiente obrigatório de produção**
    Do instead: ao executar a imagem com `NODE_ENV=production`, fornecer DATABASE_URL,
    PORT, WEB_ORIGIN, JWT_ACCESS_SECRET/ISSUER/AUDIENCE e RESEND_API_KEY/FROM antes do health.
-3. **[2026-09-08] Constituição orienta os artefatos do Spec Kit**
+4. **[2026-09-08] Constituição orienta os artefatos do Spec Kit**
    Do instead: consultar `.specify/memory/constitution.md` e o plano vigente antes de
    especificar ou implementar; manter os templates alinhados ao alterar a governança.
-4. **[2026-09-09] Prisma 7 gera client sem modelos e sem acessar o banco**
+5. **[2026-09-09] Prisma 7 gera client sem modelos e sem acessar o banco**
    Do instead: executar `db:generate` antes de typecheck/build; manter generator ESM/ts
    com imports js e não usar a opção removida `--allow-no-models`.
-5. **[2026-09-09] Testes ESM preservam a compilação usada no runtime**
+6. **[2026-09-09] Testes ESM preservam a compilação usada no runtime**
    Do instead: usar os scripts Jest que compilam com TypeScript/NodeNext e decorators;
    reservar `driverfin_test` aos smokes, sem reutilizar bancos de outros projetos.
-6. **[2026-09-25] Retomar o fechamento em T044 sem antecipar gates externos**
+7. **[2026-09-25] Retomar o fechamento em T044 sem antecipar gates externos**
    Do instead: preservar T001–T043 concluídas; provisionar Railway primeiro e só avançar
    a Vercel, Resend, smoke, README e DoD após cada comprovação real na ordem T044→T050.
 

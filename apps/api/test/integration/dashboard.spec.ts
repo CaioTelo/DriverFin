@@ -215,4 +215,56 @@ describe('dashboard', () => {
       ),
     ).toBe(true);
   });
+
+  it('agrega o ano corrente em doze meses exatos e exclui outros anos', async () => {
+    const auth = await account('dashboard-year@example.com');
+    const currentYear = today.slice(0, 4);
+    const previousYear = String(Number(currentYear) - 1);
+    await earning(auth, '100.10', {
+      date: `${currentYear}-01-05`,
+      hours: '0.00',
+      kilometers: '0.00',
+    });
+    await earning(auth, '200.20', {
+      date: `${currentYear}-01-28`,
+      hours: '0.00',
+      kilometers: '0.00',
+    });
+    await expense(auth, '50.05', { date: `${currentYear}-01-10` });
+    await expense(auth, '25.15', { date: `${currentYear}-03-01` });
+    await earning(auth, '999.00', { date: `${previousYear}-12-31` });
+
+    const response = await request(app.getHttpServer())
+      .get('/api/dashboard?period=year')
+      .set('Authorization', auth)
+      .expect(200);
+
+    expect(response.body.period).toMatchObject({
+      key: 'year',
+      startDate: `${currentYear}-01-01`,
+      endDate: `${currentYear}-12-31`,
+      seriesEndDate: `${currentYear}-12-31`,
+    });
+    expect(response.body.totals).toMatchObject({
+      revenue: '300.30',
+      expenses: '75.20',
+      profit: '225.10',
+    });
+    expect(response.body.indicators.revenuePerHour).toEqual({ value: null, reason: 'NO_HOURS' });
+    expect(response.body.evolution).toHaveLength(12);
+    expect(response.body.evolution[0]).toEqual({
+      date: `${currentYear}-01-01`,
+      revenue: '300.30',
+      expenses: '50.05',
+      profit: '250.25',
+    });
+    expect(response.body.evolution[2]).toEqual({
+      date: `${currentYear}-03-01`,
+      revenue: '0.00',
+      expenses: '25.15',
+      profit: '-25.15',
+    });
+    expect(response.body.evolution[11].date).toBe(`${currentYear}-12-01`);
+    expect(JSON.stringify(response.body)).not.toContain('999.00');
+  });
 });

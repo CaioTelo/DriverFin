@@ -24,9 +24,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>('initializing');
   const [user, setUser] = useState<api.User | null>(null);
   const operationVersion = useRef(0);
-  const revalidate = useCallback(async () => {
+  const runRevalidation = useCallback(async (background: boolean) => {
     const operation = ++operationVersion.current;
-    setStatus((current) => (current === 'logout-unknown' ? current : 'initializing'));
+    if (!background)
+      setStatus((current) => (current === 'logout-unknown' ? current : 'initializing'));
     try {
       const currentUser = await api.initializeSession();
       if (operation !== operationVersion.current) return;
@@ -40,9 +41,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setStatus((current) => (current === 'logout-unknown' ? current : 'anonymous'));
         return;
       }
-      setStatus((current) => (current === 'logout-unknown' ? current : 'unavailable'));
+      if (!background)
+        setStatus((current) => (current === 'logout-unknown' ? current : 'unavailable'));
     }
   }, []);
+  const revalidate = useCallback(() => runRevalidation(false), [runRevalidation]);
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void revalidate();
@@ -51,7 +54,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [revalidate]);
   useEffect(() => {
     const update = () => {
-      if (status !== 'logout-unknown' && document.visibilityState === 'visible') void revalidate();
+      if (status === 'authenticated' && document.visibilityState === 'visible')
+        void runRevalidation(true);
     };
     window.addEventListener('pageshow', update);
     window.addEventListener('focus', update);
@@ -61,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('focus', update);
       document.removeEventListener('visibilitychange', update);
     };
-  }, [revalidate, status]);
+  }, [runRevalidation, status]);
   const value = useMemo<AuthContextValue>(
     () => ({
       status,

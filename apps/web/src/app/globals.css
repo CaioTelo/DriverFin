@@ -569,7 +569,7 @@ dialog::backdrop {
 
 .period-filter {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.6rem;
   margin: 1.25rem 0;
 }
@@ -950,7 +950,7 @@ dialog::backdrop {
     gap: 1rem;
   }
   .period-filter {
-    min-width: 24rem;
+    min-width: 30rem;
     margin: 0;
   }
   .charts-grid {

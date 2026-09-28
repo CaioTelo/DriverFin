@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { DashboardResult } from '@/lib/api-client';
+import type { DashboardPeriod, DashboardResult } from '@/lib/api-client';
 import { formatDate, formatMoney } from '@/lib/format';
 
 type Distribution = Array<{ id: string; name: string; amount: string }>;
@@ -100,7 +100,32 @@ function DistributionTooltip({
   ) : null;
 }
 
-export function FinancialEvolutionChart({ data }: { data: DashboardResult['evolution'] }) {
+const monthLabels = [
+  'Jan',
+  'Fev',
+  'Mar',
+  'Abr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Set',
+  'Out',
+  'Nov',
+  'Dez',
+];
+
+function evolutionLabel(date: string, period: DashboardPeriod) {
+  return period === 'year' ? monthLabels[Number(date.slice(5, 7)) - 1] : date.slice(8, 10);
+}
+
+export function FinancialEvolutionChart({
+  data,
+  period,
+}: {
+  data: DashboardResult['evolution'];
+  period: DashboardPeriod;
+}) {
   const chartData = data.map((item) => ({
     ...item,
     revenueNumber: Number(item.revenue),
@@ -127,9 +152,12 @@ export function FinancialEvolutionChart({ data }: { data: DashboardResult['evolu
                 accessibilityLayer
               >
                 <CartesianGrid stroke="var(--line)" strokeDasharray="3 3" />
-                <XAxis dataKey="date" tickFormatter={(value: string) => value.slice(8, 10)} />
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(value: string) => evolutionLabel(value, period)}
+                />
                 <YAxis />
-                <Tooltip content={<EvolutionTooltip />} />
+                <Tooltip content={<EvolutionTooltip period={period} />} />
                 <Legend />
                 <Line
                   type="linear"
@@ -158,11 +186,11 @@ export function FinancialEvolutionChart({ data }: { data: DashboardResult['evolu
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <div className="sr-table" tabIndex={0} aria-label="Tabela da evolução financeira">
-            <table>
+          <div className="sr-table" tabIndex={0}>
+            <table aria-label="Tabela da evolução financeira">
               <thead>
                 <tr>
-                  <th>Data</th>
+                  <th>{period === 'year' ? 'Mês' : 'Data'}</th>
                   <th>Receita</th>
                   <th>Despesas</th>
                   <th>Lucro</th>
@@ -171,7 +199,11 @@ export function FinancialEvolutionChart({ data }: { data: DashboardResult['evolu
               <tbody>
                 {data.map((item) => (
                   <tr key={item.date}>
-                    <td>{formatDate(item.date)}</td>
+                    <td>
+                      {period === 'year'
+                        ? evolutionLabel(item.date, period)
+                        : formatDate(item.date)}
+                    </td>
                     <td>{formatMoney(item.revenue)}</td>
                     <td>{formatMoney(item.expenses)}</td>
                     <td>{formatMoney(item.profit)}</td>
@@ -191,14 +223,18 @@ export function FinancialEvolutionChart({ data }: { data: DashboardResult['evolu
 function EvolutionTooltip({
   active,
   payload,
+  period,
 }: {
   active?: boolean;
   payload?: Array<{ payload: DashboardResult['evolution'][number] }>;
+  period: DashboardPeriod;
 }) {
   const item = payload?.[0]?.payload;
   return active && item ? (
     <div className="chart-tooltip">
-      <strong>{formatDate(item.date)}</strong>
+      <strong>
+        {period === 'year' ? evolutionLabel(item.date, period) : formatDate(item.date)}
+      </strong>
       <span>Receita: {formatMoney(item.revenue)}</span>
       <span>Despesas: {formatMoney(item.expenses)}</span>
       <span>Lucro: {formatMoney(item.profit)}</span>

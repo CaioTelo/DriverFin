@@ -19,6 +19,7 @@ const periods: Array<{ key: DashboardPeriod; label: string }> = [
   { key: 'today', label: 'Hoje' },
   { key: 'week', label: 'Semana' },
   { key: 'month', label: 'Mês' },
+  { key: 'year', label: 'Ano' },
 ];
 const reason = {
   NO_REVENUE: 'Sem receita no período.',
@@ -35,25 +36,27 @@ export function DashboardView() {
   const requestId = useRef(0);
   const controller = useRef<AbortController | null>(null);
 
-  const load = useCallback(async (nextPeriod: DashboardPeriod) => {
+  const load = useCallback(async (nextPeriod: DashboardPeriod, background = false) => {
     const id = ++requestId.current;
     controller.current?.abort();
     const activeController = new AbortController();
     controller.current = activeController;
-    setLoading(true);
-    setError(null);
-    setSnapshot(null);
+    if (!background) {
+      setLoading(true);
+      setError(null);
+      setSnapshot(null);
+    }
     try {
       const result = await getDashboard(nextPeriod, activeController.signal);
       if (id === requestId.current) setSnapshot(result);
     } catch (caught) {
       if (activeController.signal.aborted) return;
-      if (id === requestId.current)
+      if (id === requestId.current && !background)
         setError(
           caught instanceof ApiError ? caught.message : 'Não foi possível carregar o dashboard.',
         );
     } finally {
-      if (id === requestId.current) setLoading(false);
+      if (id === requestId.current && !background) setLoading(false);
     }
   }, []);
 
@@ -66,7 +69,7 @@ export function DashboardView() {
   }, [load, period]);
   useEffect(() => {
     const refresh = () => {
-      if (document.visibilityState === 'visible') void load(period);
+      if (document.visibilityState === 'visible') void load(period, true);
     };
     window.addEventListener('focus', refresh);
     document.addEventListener('visibilitychange', refresh);
@@ -181,7 +184,7 @@ function DashboardSnapshot({ snapshot }: { snapshot: DashboardResult }) {
       <div className="charts-grid">
         <PlatformRevenueChart data={snapshot.revenueByPlatform} />
         <CategoryExpensesChart data={snapshot.expensesByCategory} />
-        <FinancialEvolutionChart data={snapshot.evolution} />
+        <FinancialEvolutionChart data={snapshot.evolution} period={snapshot.period.key} />
       </div>
       <section className="recent card">
         <h2>Últimos lançamentos</h2>

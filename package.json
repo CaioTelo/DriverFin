@@ -12,6 +12,8 @@
   },
   "packageManager": "npm@11.16.0",
   "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "dev:setup": "bash scripts/setup-local.sh",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "lint": "npm run lint --workspaces",

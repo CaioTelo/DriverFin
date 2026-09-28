@@ -40,7 +40,7 @@ function metric(page: Page, label: string) {
   return page.locator('.metric-card').filter({ has: page.getByRole('heading', { name: label }) });
 }
 
-test('exibe os 12 componentes, três filtros, precisão, toque e dados atuais após mutações', async ({
+test('exibe os 12 componentes, quatro filtros, precisão, toque e dados atuais após mutações', async ({
   page,
   request,
 }) => {
@@ -63,13 +63,19 @@ test('exibe os 12 componentes, três filtros, precisão, toque e dados atuais ap
     'Últimos lançamentos',
   ])
     await expect(page.getByRole('heading', { name: heading })).toBeVisible();
-  for (const filter of ['Hoje', 'Semana', 'Mês']) {
+  for (const filter of ['Hoje', 'Semana', 'Mês', 'Ano']) {
     await page
       .getByRole('button', { name: filter })
       .dispatchEvent('pointerdown', { pointerType: 'touch' });
     await page.getByRole('button', { name: filter }).click();
     await expect(metric(page, 'Receita total')).toContainText('R$ 300,00');
   }
+  await expect(page.getByRole('button', { name: 'Ano' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.dashboard-range')).toContainText(`/01/${new Date().getFullYear()}`);
+  const annualTable = page.getByRole('table', { name: 'Tabela da evolução financeira' });
+  await expect(annualTable.locator('tbody tr')).toHaveCount(12);
+  await expect(annualTable.locator('tbody tr').first()).toContainText('Jan');
+  await expect(annualTable.locator('tbody tr').last()).toContainText('Dez');
   await page.goto('/despesas');
   await page.getByRole('link', { name: 'Consultar ou editar' }).click();
   await page.getByLabel('Valor').fill('100,00');
@@ -124,6 +130,21 @@ test('exibe o fim inclusivo do filtro e não o fim parcial da série', async ({ 
     `${format(period.startDate)} a ${format(period.endDate)}`,
   );
   expect(period.endDate >= period.seriesEndDate).toBe(true);
+});
+
+test('preserva o snapshot durante atualização silenciosa por foco', async ({ page, request }) => {
+  await login(page, request);
+  await createEarning(page);
+  await page.goto('/dashboard');
+  await expect(metric(page, 'Receita total')).toContainText('R$ 300,00');
+  await page.route('**/api/dashboard?period=month', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await route.abort('connectionfailed');
+  });
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(metric(page, 'Receita total')).toContainText('R$ 300,00');
+  await expect(page.locator('.dashboard-loading')).toHaveCount(0);
+  await expect(page.locator('.error[role="alert"]')).toHaveCount(0);
 });
 
 for (const width of [360, 375, 390, 768, 1280, 1366, 1440])

@@ -22,7 +22,7 @@ negócio, sem alterar retrospectivamente o escopo desta entrega.
 - Cadastro, login, logout e recuperação de senha por e-mail.
 - Consulta do perfil e cadastro de um único veículo.
 - CRUD completo de ganhos e despesas.
-- Dashboard com filtros Hoje, Semana e Mês.
+- Dashboard com filtros Hoje, Semana, Mês e Ano.
 - Receita total, despesas, lucro líquido e margem.
 - Receita e lucro por hora e por quilômetro.
 - Receita por plataforma, gastos por categoria e evolução financeira.
@@ -106,7 +106,26 @@ catálogos fixos de plataformas e categorias sem criar dados pessoais.
 
 ### API e frontend
 
-Execute em terminais separados, ambos a partir da raiz:
+Após preparar o banco, inicie API e frontend juntos a partir da raiz:
+
+```bash
+npm run dev
+```
+
+O comando mantém o PostgreSQL ativo, inicia API e frontend com hot reload e encerra os
+dois processos ao pressionar `Ctrl+C`. Acesse
+[http://localhost:3000/login](http://localhost:3000/login). O health pode ser consultado
+diretamente em `http://localhost:3001/api/health` ou pelo rewrite em
+`http://localhost:3000/api/health`.
+
+Em uma instalação nova, todo o preparo inicial pode ser executado por:
+
+```bash
+npm run dev:setup
+npm run dev
+```
+
+Se preferir acompanhar cada processo em um terminal separado, use:
 
 ```bash
 npm run dev --workspace apps/api
@@ -115,10 +134,6 @@ npm run dev --workspace apps/api
 ```bash
 npm run dev --workspace apps/web
 ```
-
-Acesse [http://localhost:3000/login](http://localhost:3000/login). O health pode ser
-consultado diretamente em `http://localhost:3001/api/health` ou pelo rewrite em
-`http://localhost:3000/api/health`.
 
 ### Verificações principais
 

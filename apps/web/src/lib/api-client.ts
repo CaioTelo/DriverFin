@@ -64,7 +64,7 @@ export interface PageResult<T> {
   pageSize: 20;
   total: number;
 }
-export type DashboardPeriod = 'today' | 'week' | 'month';
+export type DashboardPeriod = 'today' | 'week' | 'month' | 'year';
 export interface DashboardMetric {
   value: string | null;
   reason: 'NO_REVENUE' | 'NO_HOURS' | 'NO_KILOMETERS' | null;

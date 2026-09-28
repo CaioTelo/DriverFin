@@ -95,7 +95,7 @@ test('revalidação antiga não sobrescreve login concluído', async ({ page, re
   await expect(page).toHaveURL(/\/dashboard/);
 });
 
-test('falha transitória de revalidação preserva a sessão e permite tentar novamente', async ({
+test('falha transitória de revalidação preserva silenciosamente a sessão e a tela', async ({
   page,
   request,
 }) => {
@@ -112,15 +112,97 @@ test('falha transitória de revalidação preserva a sessão e permite tentar no
 
   await page.route('**/api/auth/refresh', (route) => route.abort('connectionfailed'));
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.getByRole('heading', { name: /Olá, Sessão!/ })).toBeVisible();
+  await expect(page.getByText('Verificando sua sessão…')).toHaveCount(0);
   await expect(
     page.getByRole('heading', { name: 'Não foi possível verificar sua sessão' }),
-  ).toBeVisible();
+  ).toHaveCount(0);
+  await expect(page).toHaveURL(/\/dashboard/);
+});
+
+test('revalidação lenta em background não desmonta a área autenticada', async ({
+  page,
+  request,
+}) => {
+  const email = `background-${unique()}@example.com`;
+  await request.post('http://127.0.0.1:3001/api/auth/register', {
+    headers: { Origin: 'http://localhost:3000', 'X-DriverFin-Client': 'web' },
+    data: { name: 'Sessão Background', email, password: 'senha background' },
+  });
+  await page.goto('/login');
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByLabel('Senha').fill('senha background');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page.getByRole('heading', { name: /Olá, Sessão!/ })).toBeVisible();
+  await page.route('**/api/auth/refresh', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    await route.continue();
+  });
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page.getByRole('heading', { name: /Olá, Sessão!/ })).toBeVisible();
+  await expect(page.getByText('Verificando sua sessão…')).toHaveCount(0);
+});
+
+test('401 na revalidação em background encerra a sessão visual', async ({ page, request }) => {
+  const email = `expired-${unique()}@example.com`;
+  await request.post('http://127.0.0.1:3001/api/auth/register', {
+    headers: { Origin: 'http://localhost:3000', 'X-DriverFin-Client': 'web' },
+    data: { name: 'Sessão Expirada', email, password: 'senha expirada' },
+  });
+  await page.goto('/login');
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByLabel('Senha').fill('senha expirada');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page).toHaveURL(/\/dashboard/);
+  await page.route('**/api/auth/refresh', (route) =>
+    route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        error: {
+          code: 'INVALID_SESSION',
+          message: 'Sua sessão não é válida.',
+          writeOutcome: 'not_applied',
+        },
+      }),
+    }),
+  );
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await expect(page).toHaveURL(/\/login/);
+});
+
+test('revalidação antiga não sobrescreve logout concluído', async ({ page, request }) => {
+  const email = `logout-race-${unique()}@example.com`;
+  await request.post('http://127.0.0.1:3001/api/auth/register', {
+    headers: { Origin: 'http://localhost:3000', 'X-DriverFin-Client': 'web' },
+    data: { name: 'Logout Concorrente', email, password: 'senha logout' },
+  });
+  await page.goto('/login');
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByLabel('Senha').fill('senha logout');
+  await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page).toHaveURL(/\/dashboard/);
 
-  await page.unroute('**/api/auth/refresh');
-  await page.getByRole('button', { name: 'Tentar novamente' }).click();
-  await expect(page.getByRole('heading', { name: /Olá, Sessão!/ })).toBeVisible();
-  await expect(page).toHaveURL(/\/dashboard/);
+  let releaseRefresh!: () => void;
+  const refreshReleased = new Promise<void>((resolve) => {
+    releaseRefresh = resolve;
+  });
+  let markRefreshStarted!: () => void;
+  const refreshStarted = new Promise<void>((resolve) => {
+    markRefreshStarted = resolve;
+  });
+  await page.route('**/api/auth/refresh', async (route) => {
+    markRefreshStarted();
+    await refreshReleased;
+    await route.continue();
+  });
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await refreshStarted;
+  await page.getByRole('button', { name: 'Sair' }).click();
+  releaseRefresh();
+  await expect(page).toHaveURL(/\/login/);
+  await page.waitForTimeout(200);
+  await expect(page).toHaveURL(/\/login/);
 });
 
 for (const width of [360, 375, 390, 768, 1280, 1366, 1440]) {

@@ -182,9 +182,9 @@ export class DashboardService {
                 ]
               : [],
           ),
-          evolution: days(bounds.startDate, bounds.seriesEndDate).map((day) => {
-            const revenue = dailyRevenue.get(day) ?? 0n;
-            const expenses = dailyExpenses.get(day) ?? 0n;
+          evolution: evolutionDates(period, bounds.startDate, bounds.seriesEndDate).map((day) => {
+            const revenue = periodAmount(period, day, dailyRevenue);
+            const expenses = periodAmount(period, day, dailyExpenses);
             return {
               date: day,
               revenue: formatScaled(revenue),
@@ -210,4 +210,22 @@ function days(start: string, end: string): string[] {
   )
     result.push(dateString(current));
   return result;
+}
+
+function evolutionDates(period: DashboardPeriod, start: string, end: string): string[] {
+  if (period !== 'year') return days(start, end);
+  const year = start.slice(0, 4);
+  return Array.from(
+    { length: 12 },
+    (_, index) => `${year}-${String(index + 1).padStart(2, '0')}-01`,
+  );
+}
+
+function periodAmount(period: DashboardPeriod, date: string, amounts: Map<string, bigint>): bigint {
+  if (period !== 'year') return amounts.get(date) ?? 0n;
+  const month = date.slice(0, 7);
+  return [...amounts].reduce(
+    (total, [day, amount]) => (day.startsWith(month) ? total + amount : total),
+    0n,
+  );
 }

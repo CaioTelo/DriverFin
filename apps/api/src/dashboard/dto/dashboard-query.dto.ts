@@ -3,6 +3,6 @@ import type { DashboardPeriod } from '../../common/calendar/calendar.js';
 
 export class DashboardQueryDto {
   @IsOptional()
-  @IsIn(['today', 'week', 'month'])
+  @IsIn(['today', 'week', 'month', 'year'])
   period: DashboardPeriod = 'month';
 }

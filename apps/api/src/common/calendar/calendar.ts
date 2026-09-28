@@ -8,7 +8,7 @@ export interface CalendarDate {
   day: number;
 }
 
-export type DashboardPeriod = 'today' | 'week' | 'month';
+export type DashboardPeriod = 'today' | 'week' | 'month' | 'year';
 
 export interface PeriodBounds {
   startDate: string;
@@ -57,6 +57,14 @@ export function periodBounds(period: DashboardPeriod, clock: Clock): PeriodBound
       startDate: formatCalendarDate({ ...today, day: 1 }),
       endDate: formatCalendarDate({ ...today, day: daysInMonth(today.year, today.month) }),
       seriesEndDate: formatCalendarDate(today),
+    };
+  }
+
+  if (period === 'year') {
+    return {
+      startDate: formatCalendarDate({ year: today.year, month: 1, day: 1 }),
+      endDate: formatCalendarDate({ year: today.year, month: 12, day: 31 }),
+      seriesEndDate: formatCalendarDate({ year: today.year, month: 12, day: 31 }),
     };
   }
 

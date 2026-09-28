@@ -11,7 +11,7 @@ import {
 describe('calendário do produto', () => {
   const clock = new FixedClock(new Date('2026-09-08T15:00:00.000Z'));
 
-  it('calcula today, week e month com limites inclusivos e série até hoje', () => {
+  it('calcula today, week, month e year com limites inclusivos', () => {
     expect(periodBounds('today', clock)).toEqual({
       startDate: '2026-09-08',
       endDate: '2026-09-08',
@@ -26,6 +26,11 @@ describe('calendário do produto', () => {
       startDate: '2026-09-01',
       endDate: '2026-09-30',
       seriesEndDate: '2026-09-08',
+    });
+    expect(periodBounds('year', clock)).toEqual({
+      startDate: '2026-01-01',
+      endDate: '2026-12-31',
+      seriesEndDate: '2026-12-31',
     });
   });
 
@@ -61,6 +66,21 @@ describe('calendário do produto', () => {
     expect(periodBounds('month', new FixedClock(new Date('2024-02-29T15:00:00Z')))).toMatchObject({
       startDate: '2024-02-01',
       endDate: '2024-02-29',
+    });
+    expect(periodBounds('year', new FixedClock(new Date('2026-12-31T02:59:59Z')))).toEqual({
+      startDate: '2026-01-01',
+      endDate: '2026-12-31',
+      seriesEndDate: '2026-12-31',
+    });
+    expect(periodBounds('year', new FixedClock(new Date('2026-12-31T03:00:00Z')))).toEqual({
+      startDate: '2026-01-01',
+      endDate: '2026-12-31',
+      seriesEndDate: '2026-12-31',
+    });
+    expect(periodBounds('year', new FixedClock(new Date('2027-01-01T03:00:00Z')))).toEqual({
+      startDate: '2027-01-01',
+      endDate: '2027-12-31',
+      seriesEndDate: '2027-12-31',
     });
   });
 
