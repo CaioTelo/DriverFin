@@ -8,6 +8,7 @@ export default function NewEarningPage() {
     <section className="page narrow">
       <p className="eyebrow">Receitas</p>
       <h1>Novo ganho</h1>
+      <p className="page-subtitle">Registre os dados do seu dia de trabalho.</p>
       {saved ? (
         <div className="success" role="status">
           <p>Ganho salvo com sucesso.</p>

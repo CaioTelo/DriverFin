@@ -31,7 +31,14 @@ export function ForgotPasswordForm() {
     <form className="auth-form" onSubmit={submit}>
       <label>
         E-mail
-        <input name="email" type="email" autoComplete="email" required maxLength={254} />
+        <input
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          maxLength={254}
+          placeholder="seu@email.com"
+        />
       </label>
       {error && (
         <p className="error" role="alert">

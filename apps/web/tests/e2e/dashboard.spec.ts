@@ -126,12 +126,12 @@ test('exibe o fim inclusivo do filtro e não o fim parcial da série', async ({ 
   expect(period.endDate >= period.seriesEndDate).toBe(true);
 });
 
-for (const width of [360, 390, 768, 1366])
+for (const width of [360, 375, 390, 768, 1280, 1366, 1440])
   test(`dashboard responsivo e acessível em ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 900 });
     await login(page, request);
     await page.goto('/dashboard');
-    await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Olá, Dashboard!/ })).toBeVisible();
     await expect(page.getByText('Nenhuma movimentação para exibir neste período.')).toBeVisible();
     expect(
       await page.evaluate(

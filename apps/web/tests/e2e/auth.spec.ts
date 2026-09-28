@@ -15,9 +15,9 @@ test('cadastro, login, perfil, reload, logout e histórico', async ({ page }) =>
   await page.getByLabel('Senha').fill('senha e2e segura');
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page).toHaveURL(/\/dashboard/);
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Olá, Motorista!/ })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Olá, Motorista!/ })).toBeVisible();
 
   await page.getByRole('button', { name: 'Sair' }).click();
   await expect(page).toHaveURL(/\/login/);
@@ -90,7 +90,7 @@ test('revalidação antiga não sobrescreve login concluído', async ({ page, re
   await page.getByRole('button', { name: 'Entrar' }).click();
   await expect(page).toHaveURL(/\/dashboard/);
   releaseRefresh();
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Olá, Login!/ })).toBeVisible();
   await page.waitForTimeout(200);
   await expect(page).toHaveURL(/\/dashboard/);
 });
@@ -119,11 +119,11 @@ test('falha transitória de revalidação preserva a sessão e permite tentar no
 
   await page.unroute('**/api/auth/refresh');
   await page.getByRole('button', { name: 'Tentar novamente' }).click();
-  await expect(page.getByRole('heading', { name: 'Dashboard' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Olá, Sessão!/ })).toBeVisible();
   await expect(page).toHaveURL(/\/dashboard/);
 });
 
-for (const width of [360, 390, 768, 1366]) {
+for (const width of [360, 375, 390, 768, 1280, 1366, 1440]) {
   test(`telas de acesso sem rolagem horizontal em ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     for (const path of ['/login', '/cadastro']) {

@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { type FormEvent, useEffect, useState } from 'react';
 import {
   ApiError,
@@ -58,73 +59,80 @@ export function ExpenseForm({
   }
   return (
     <form className="domain-form card" onSubmit={submit} noValidate>
-      <label>
-        Valor
-        <input
-          name="amount"
-          inputMode="decimal"
-          required
-          placeholder="0,00"
-          autoFocus
-          defaultValue={expense?.amount.replace('.', ',')}
-          aria-invalid={Boolean(fieldErrors.amount)}
-          aria-describedby={fieldErrors.amount ? 'expense-amount-error' : undefined}
-        />
-        <FieldError id="expense-amount-error" messages={fieldErrors.amount} />
-      </label>
-      <label>
-        Categoria
-        <select
-          name="categoryId"
-          required
-          defaultValue={expense?.category.id ?? ''}
-          aria-invalid={Boolean(fieldErrors.categoryId)}
-          aria-describedby={fieldErrors.categoryId ? 'expense-category-error' : undefined}
-        >
-          <option value="" disabled>
-            Selecione
-          </option>
-          {categories.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
+      <div className="expense-form-grid">
+        <label>
+          Valor
+          <input
+            name="amount"
+            inputMode="decimal"
+            required
+            placeholder="0,00"
+            autoFocus
+            defaultValue={expense?.amount.replace('.', ',')}
+            aria-invalid={Boolean(fieldErrors.amount)}
+            aria-describedby={fieldErrors.amount ? 'expense-amount-error' : undefined}
+          />
+          <FieldError id="expense-amount-error" messages={fieldErrors.amount} />
+        </label>
+        <label>
+          Categoria
+          <select
+            name="categoryId"
+            required
+            defaultValue={expense?.category.id ?? ''}
+            aria-invalid={Boolean(fieldErrors.categoryId)}
+            aria-describedby={fieldErrors.categoryId ? 'expense-category-error' : undefined}
+          >
+            <option value="" disabled>
+              Selecione
             </option>
-          ))}
-        </select>
-        <FieldError id="expense-category-error" messages={fieldErrors.categoryId} />
-      </label>
-      <label>
-        Data
-        <input
-          name="date"
-          type="date"
-          required
-          max={productToday()}
-          defaultValue={expense?.date ?? productToday()}
-          aria-invalid={Boolean(fieldErrors.date)}
-          aria-describedby={fieldErrors.date ? 'expense-date-error' : undefined}
-        />
-        <FieldError id="expense-date-error" messages={fieldErrors.date} />
-      </label>
-      <label>
-        Descrição <span>(opcional)</span>
-        <textarea
-          name="description"
-          maxLength={500}
-          rows={4}
-          defaultValue={expense?.description ?? ''}
-          aria-invalid={Boolean(fieldErrors.description)}
-          aria-describedby={fieldErrors.description ? 'expense-description-error' : undefined}
-        />
-        <FieldError id="expense-description-error" messages={fieldErrors.description} />
-      </label>
+            {categories.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+          <FieldError id="expense-category-error" messages={fieldErrors.categoryId} />
+        </label>
+        <label>
+          Data
+          <input
+            name="date"
+            type="date"
+            required
+            max={productToday()}
+            defaultValue={expense?.date ?? productToday()}
+            aria-invalid={Boolean(fieldErrors.date)}
+            aria-describedby={fieldErrors.date ? 'expense-date-error' : undefined}
+          />
+          <FieldError id="expense-date-error" messages={fieldErrors.date} />
+        </label>
+        <label>
+          Descrição <span>(opcional)</span>
+          <textarea
+            name="description"
+            maxLength={500}
+            rows={4}
+            defaultValue={expense?.description ?? ''}
+            aria-invalid={Boolean(fieldErrors.description)}
+            aria-describedby={fieldErrors.description ? 'expense-description-error' : undefined}
+          />
+          <FieldError id="expense-description-error" messages={fieldErrors.description} />
+        </label>
+      </div>
       {error && (
         <p className="error" role="alert">
           {error}
         </p>
       )}
-      <button type="submit" disabled={busy}>
-        {busy ? 'Salvando…' : 'Salvar despesa'}
-      </button>
+      <div className="form-actions">
+        <button type="submit" disabled={busy}>
+          {busy ? 'Salvando…' : 'Salvar despesa'}
+        </button>
+        <Link className="button-link button-secondary" href="/despesas">
+          Cancelar
+        </Link>
+      </div>
     </form>
   );
 }

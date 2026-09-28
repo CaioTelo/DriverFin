@@ -4,7 +4,7 @@ export default function ProfilePage() {
     <section className="page">
       <p className="eyebrow">Sua conta</p>
       <h1>Perfil</h1>
-      <p>Seus dados de identificação são somente para consulta.</p>
+      <p className="page-subtitle">Seus dados de identificação são somente para consulta.</p>
       <ProfileView />
     </section>
   );

@@ -55,7 +55,12 @@ export function ExpenseEditor({ id }: { id: string }) {
       </div>
     );
   }
-  if (!expense) return <p aria-busy="true">Carregando despesa…</p>;
+  if (!expense)
+    return (
+      <div className="loading-state" aria-busy="true">
+        Carregando despesa…
+      </div>
+    );
 
   return (
     <>
@@ -80,7 +85,7 @@ export function ExpenseEditor({ id }: { id: string }) {
           setSaved(true);
         }}
       />
-      <button className="danger" onClick={() => dialog.current?.showModal()}>
+      <button className="danger delete-action" onClick={() => dialog.current?.showModal()}>
         Excluir despesa
       </button>
       <dialog ref={dialog} aria-labelledby="delete-expense-title">

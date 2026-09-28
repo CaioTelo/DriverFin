@@ -8,6 +8,7 @@ export default function NewExpensePage() {
     <section className="page narrow">
       <p className="eyebrow">Custos</p>
       <h1>Nova despesa</h1>
+      <p className="page-subtitle">Registre um gasto em poucos segundos.</p>
       {saved ? (
         <div className="success" role="status">
           <p>Despesa salva com sucesso.</p>

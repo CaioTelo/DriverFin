@@ -51,11 +51,16 @@ export function VehicleView() {
       setBusy(false);
     }
   }
-  if (vehicle === undefined && !error) return <p aria-busy="true">Carregando veículo…</p>;
+  if (vehicle === undefined && !error)
+    return (
+      <div className="loading-state" aria-busy="true">
+        Carregando veículo…
+      </div>
+    );
   if (vehicle)
     return (
       <>
-        <p className="success" role="status">
+        <p className="vehicle-status" role={success ? 'status' : undefined}>
           {success ?? 'Veículo cadastrado'}
         </p>
         <dl className="details card">

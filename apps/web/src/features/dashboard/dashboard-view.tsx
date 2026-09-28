@@ -8,6 +8,7 @@ import {
   type DashboardResult,
 } from '@/lib/api-client';
 import { formatDate, formatMoney } from '@/lib/format';
+import { useAuth } from '@/features/auth/auth-provider';
 import {
   CategoryExpensesChart,
   FinancialEvolutionChart,
@@ -26,6 +27,7 @@ const reason = {
 } as const;
 
 export function DashboardView() {
+  const auth = useAuth();
   const [period, setPeriod] = useState<DashboardPeriod>('month');
   const [snapshot, setSnapshot] = useState<DashboardResult | null>(null);
   const [loading, setLoading] = useState(true);
@@ -76,20 +78,29 @@ export function DashboardView() {
 
   return (
     <>
-      <div className="period-filter" aria-label="Período do dashboard">
-        {periods.map((item) => (
-          <button
-            key={item.key}
-            aria-pressed={period === item.key}
-            disabled={loading && period === item.key}
-            onClick={() => setPeriod(item.key)}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="dashboard-toolbar">
+        <div className="dashboard-intro">
+          <h1>
+            Olá, {auth.user?.name.split(/\s+/)[0] ?? 'motorista'}!{' '}
+            <span aria-hidden="true">👋</span>
+          </h1>
+          <p>Aqui está um resumo das suas atividades no período selecionado.</p>
+        </div>
+        <div className="period-filter" aria-label="Período do dashboard">
+          {periods.map((item) => (
+            <button
+              key={item.key}
+              aria-pressed={period === item.key}
+              disabled={loading && period === item.key}
+              onClick={() => setPeriod(item.key)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
       {loading && (
-        <div className="dashboard-loading card" aria-busy="true">
+        <div className="dashboard-loading loading-state" aria-busy="true">
           Carregando indicadores…
         </div>
       )}
@@ -106,26 +117,58 @@ export function DashboardView() {
 
 function DashboardSnapshot({ snapshot }: { snapshot: DashboardResult }) {
   const cards = [
-    ['Receita total', { text: formatMoney(snapshot.totals.revenue), explanation: null }],
-    ['Despesas totais', { text: formatMoney(snapshot.totals.expenses), explanation: null }],
-    ['Lucro líquido', { text: formatMoney(snapshot.totals.profit), explanation: null }],
-    ['Margem de lucro', metric(snapshot.indicators.margin, '%')],
-    ['Receita por hora', metric(snapshot.indicators.revenuePerHour, 'money')],
-    ['Lucro por hora', metric(snapshot.indicators.profitPerHour, 'money')],
-    ['Receita por km', metric(snapshot.indicators.revenuePerKm, 'money')],
-    ['Lucro por km', metric(snapshot.indicators.profitPerKm, 'money')],
-  ] as const;
+    {
+      label: 'Receita total',
+      value: { text: formatMoney(snapshot.totals.revenue), explanation: null },
+      className: 'revenue',
+    },
+    {
+      label: 'Despesas totais',
+      value: { text: formatMoney(snapshot.totals.expenses), explanation: null },
+      className: 'expense',
+    },
+    {
+      label: 'Lucro líquido',
+      value: { text: formatMoney(snapshot.totals.profit), explanation: null },
+      className: 'primary-profit',
+    },
+    {
+      label: 'Margem de lucro',
+      value: metric(snapshot.indicators.margin, '%'),
+      className: 'margin',
+    },
+    {
+      label: 'Receita por hora',
+      value: metric(snapshot.indicators.revenuePerHour, 'money'),
+      className: 'ratio',
+    },
+    {
+      label: 'Lucro por hora',
+      value: metric(snapshot.indicators.profitPerHour, 'money'),
+      className: 'ratio',
+    },
+    {
+      label: 'Receita por km',
+      value: metric(snapshot.indicators.revenuePerKm, 'money'),
+      className: 'ratio',
+    },
+    {
+      label: 'Lucro por km',
+      value: metric(snapshot.indicators.profitPerKm, 'money'),
+      className: 'ratio',
+    },
+  ];
   return (
     <div className="dashboard-content">
       <p className="dashboard-range">
         {formatDate(snapshot.period.startDate)} a {formatDate(snapshot.period.endDate)}
       </p>
       <div className="summary-grid">
-        {cards.map(([label, value]) => (
-          <article className="metric-card card" key={label}>
-            <h2>{label}</h2>
-            <strong>{value.text}</strong>
-            {value.explanation && <p>{value.explanation}</p>}
+        {cards.map((card) => (
+          <article className={`metric-card card ${card.className}`} key={card.label}>
+            <h2>{card.label}</h2>
+            <strong>{card.value.text}</strong>
+            {card.value.explanation && <p>{card.value.explanation}</p>}
           </article>
         ))}
       </div>
@@ -152,7 +195,10 @@ function DashboardSnapshot({ snapshot }: { snapshot: DashboardResult }) {
                     {entry.type === 'earning' ? 'Ganho' : 'Despesa'} · {formatDate(entry.date)}
                   </span>
                 </div>
-                <strong>{formatMoney(entry.amount)}</strong>
+                <strong className={entry.type === 'expense' ? 'recent-expense' : 'recent-revenue'}>
+                  {entry.type === 'expense' ? '− ' : '+ '}
+                  {formatMoney(entry.amount)}
+                </strong>
               </li>
             ))}
           </ul>

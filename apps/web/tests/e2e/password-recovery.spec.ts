@@ -77,7 +77,7 @@ test('recupera senha, invalida uso repetido, senha antiga e sessão anterior', a
   await expect(page.locator('p[role="alert"]')).toContainText('inválido ou expirou');
 });
 
-for (const width of [360, 390, 768, 1366]) {
+for (const width of [360, 375, 390, 768, 1280, 1366, 1440]) {
   test(`recuperação sem corte horizontal em ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 800 });
     await page.goto('/recuperar-senha');

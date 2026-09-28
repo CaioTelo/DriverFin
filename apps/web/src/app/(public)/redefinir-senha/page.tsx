@@ -1,12 +1,9 @@
 import { ResetPasswordForm } from '@/features/auth/password-recovery-form';
+import { AuthLayout } from '@/components/layout/auth-layout';
 export default function ResetPasswordPage() {
   return (
-    <main className="center">
-      <section className="card">
-        <p className="eyebrow">Recuperação</p>
-        <h1>Defina uma nova senha</h1>
-        <ResetPasswordForm />
-      </section>
-    </main>
+    <AuthLayout title="Defina uma nova senha" subtitle="Escolha uma senha segura para sua conta.">
+      <ResetPasswordForm />
+    </AuthLayout>
   );
 }

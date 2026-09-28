@@ -21,8 +21,8 @@ test('perfil próprio e veículo sem placa persistem sem oferecer edição', asy
 }) => {
   const email = await registerAndLogin(page, request, 'Motorista Perfil');
   await page.getByRole('link', { name: 'Perfil', exact: true }).click();
-  await expect(page.getByText('Motorista Perfil')).toBeVisible();
-  await expect(page.getByText(email)).toBeVisible();
+  await expect(page.locator('.details').getByText('Motorista Perfil')).toBeVisible();
+  await expect(page.locator('.details').getByText(email)).toBeVisible();
   await expect(page.getByRole('button', { name: /editar/i })).toHaveCount(0);
   await page.getByRole('link', { name: 'Veículo', exact: true }).click();
   await page
@@ -79,7 +79,19 @@ test('validação e isolamento direto entre dois usuários', async ({ page, requ
   ).resolves.toEqual({ vehicle: null });
 });
 
-for (const width of [360, 390, 768, 1366])
+test('menu Mais mantém Veículo e Sair acessíveis no mobile', async ({ page, request }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await registerAndLogin(page, request, 'Menu Mobile');
+  await page.getByRole('button', { name: 'Mais' }).click();
+  await expect(page.getByRole('heading', { name: 'Mais opções' })).toBeVisible();
+  await page.getByRole('link', { name: 'Veículo', exact: true }).click();
+  await expect(page).toHaveURL(/\/veiculo/);
+  await page.getByRole('button', { name: 'Mais' }).click();
+  await page.getByRole('button', { name: 'Sair', exact: true }).click();
+  await expect(page).toHaveURL(/\/login/);
+});
+
+for (const width of [360, 375, 390, 768, 1280, 1366, 1440])
   test(`perfil e veículo responsivos em ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 850 });
     await registerAndLogin(page, request, `Nome ${'extenso '.repeat(8)}`);

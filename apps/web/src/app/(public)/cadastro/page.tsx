@@ -1,16 +1,17 @@
 import Link from 'next/link';
 import { AuthForm } from '@/features/auth/auth-form';
+import { AuthLayout } from '@/components/layout/auth-layout';
 export default function RegisterPage() {
   return (
-    <main className="center">
-      <section className="card">
-        <p className="eyebrow">DriverFin</p>
-        <h1>Crie sua conta</h1>
-        <AuthForm mode="register" />
-        <p>
-          Já possui conta? <Link href="/login">Entrar</Link>
-        </p>
-      </section>
-    </main>
+    <AuthLayout
+      title="Crie sua conta"
+      subtitle="Comece a organizar seus números em poucos minutos."
+    >
+      <AuthForm mode="register" />
+      <p className="auth-links">
+        <span>Já possui uma conta?</span>
+        <Link href="/login">Entrar</Link>
+      </p>
+    </AuthLayout>
   );
 }

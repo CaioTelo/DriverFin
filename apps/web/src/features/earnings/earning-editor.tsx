@@ -48,7 +48,12 @@ export function EarningEditor({ id }: { id: string }) {
         {error}
       </p>
     );
-  if (!earning) return <p aria-busy="true">Carregando ganho…</p>;
+  if (!earning)
+    return (
+      <div className="loading-state" aria-busy="true">
+        Carregando ganho…
+      </div>
+    );
   return (
     <>
       {saved && (
@@ -72,7 +77,7 @@ export function EarningEditor({ id }: { id: string }) {
           setSaved(true);
         }}
       />
-      <button className="danger" onClick={() => dialog.current?.showModal()}>
+      <button className="danger delete-action" onClick={() => dialog.current?.showModal()}>
         Excluir ganho
       </button>
       <dialog ref={dialog}>

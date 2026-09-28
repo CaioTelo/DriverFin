@@ -33,7 +33,7 @@ test('CRUD completo sem descrição, edição, limpeza, cancelamento e persistê
   await page.getByRole('button', { name: 'Salvar despesa' }).click();
   await expect(page.getByText('Despesa salva com sucesso.')).toBeVisible();
   await page.getByRole('link', { name: 'Ver despesas' }).click();
-  await expect(page.getByText('R$ 120,30')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '− R$ 120,30' })).toBeVisible();
   await page.reload();
   await page.getByRole('link', { name: 'Consultar ou editar' }).click();
   await expect(page.getByLabel('Valor')).toHaveValue('120,30');
@@ -146,7 +146,7 @@ test('distingue falha de consulta, sessão inválida e recurso removido', async 
   await expect(page.getByRole('button', { name: 'Voltar para despesas' })).toBeVisible();
 });
 
-for (const width of [360, 390, 768, 1366]) {
+for (const width of [360, 375, 390, 768, 1280, 1366, 1440]) {
   test(`despesas responsivas em ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 900 });
     await login(page, request);

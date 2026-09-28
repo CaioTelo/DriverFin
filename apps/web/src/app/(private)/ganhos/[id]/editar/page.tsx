@@ -4,7 +4,8 @@ export default async function EditEarningPage({ params }: { params: Promise<{ id
   return (
     <section className="page narrow">
       <p className="eyebrow">Receitas</p>
-      <h1>Detalhes do ganho</h1>
+      <h1>Editar ganho</h1>
+      <p className="page-subtitle">Revise ou atualize os dados deste lançamento.</p>
       <EarningEditor id={id} />
     </section>
   );

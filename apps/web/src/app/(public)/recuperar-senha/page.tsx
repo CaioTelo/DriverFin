@@ -1,17 +1,16 @@
 import Link from 'next/link';
 import { ForgotPasswordForm } from '@/features/auth/password-recovery-form';
+import { AuthLayout } from '@/components/layout/auth-layout';
 export default function ForgotPasswordPage() {
   return (
-    <main className="center">
-      <section className="card">
-        <p className="eyebrow">Recuperação</p>
-        <h1>Recupere sua senha</h1>
-        <p>Informe seu e-mail. A resposta será a mesma para todas as contas.</p>
-        <ForgotPasswordForm />
-        <p>
-          <Link href="/login">Voltar ao login</Link>
-        </p>
-      </section>
-    </main>
+    <AuthLayout
+      title="Recupere sua senha"
+      subtitle="Informe seu e-mail e enviaremos as instruções."
+    >
+      <ForgotPasswordForm />
+      <p className="auth-links">
+        <Link href="/login">← Voltar para o login</Link>
+      </p>
+    </AuthLayout>
   );
 }

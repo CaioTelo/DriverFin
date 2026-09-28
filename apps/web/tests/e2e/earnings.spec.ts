@@ -31,7 +31,7 @@ test('CRUD completo, zeros, registros iguais, cancelamento e persistência', asy
   await page.getByRole('button', { name: 'Salvar ganho' }).click();
   await expect(page.getByText('Ganho salvo com sucesso.')).toBeVisible();
   await page.getByRole('link', { name: 'Ver ganhos' }).click();
-  await expect(page.getByText('R$ 300,00')).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'R$ 300,00' })).toBeVisible();
   await page.reload();
   await page.getByRole('link', { name: 'Consultar ou editar' }).click();
   await page.getByLabel('Valor').fill('350,25');
@@ -108,7 +108,7 @@ test('sessão expirada não grava e registro removido fica indisponível', async
   await expect(page.locator('p[role="alert"]')).toContainText('não está disponível');
 });
 
-for (const width of [360, 390, 768, 1366])
+for (const width of [360, 375, 390, 768, 1280, 1366, 1440])
   test(`ganhos responsivos em ${width}px`, async ({ page, request }) => {
     await page.setViewportSize({ width, height: 900 });
     await login(page, request);

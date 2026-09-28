@@ -18,11 +18,11 @@ import { formatDate, formatMoney } from '@/lib/format';
 type Distribution = Array<{ id: string; name: string; amount: string }>;
 
 export function PlatformRevenueChart({ data }: { data: Distribution }) {
-  return <DistributionChart title="Receita por aplicativo" data={data} color="#177245" />;
+  return <DistributionChart title="Receita por aplicativo" data={data} color="var(--brand-700)" />;
 }
 
 export function CategoryExpensesChart({ data }: { data: Distribution }) {
-  return <DistributionChart title="Gastos por categoria" data={data} color="#b45309" />;
+  return <DistributionChart title="Gastos por categoria" data={data} color="var(--expense)" />;
 }
 
 function DistributionChart({
@@ -54,11 +54,17 @@ function DistributionChart({
                 margin={{ left: 12, right: 18 }}
                 accessibilityLayer
               >
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid stroke="var(--line)" strokeDasharray="3 3" />
                 <XAxis type="number" />
                 <YAxis type="category" dataKey="name" width={90} />
                 <Tooltip content={<DistributionTooltip />} />
-                <Bar dataKey="numericAmount" fill={color} name={title} />
+                <Bar
+                  dataKey="numericAmount"
+                  fill={color}
+                  name={title}
+                  activeBar={false}
+                  isAnimationActive={false}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -120,7 +126,7 @@ export function FinancialEvolutionChart({ data }: { data: DashboardResult['evolu
                 margin={{ left: 4, right: 12, top: 8, bottom: 8 }}
                 accessibilityLayer
               >
-                <CartesianGrid strokeDasharray="3 3" />
+                <CartesianGrid stroke="var(--line)" strokeDasharray="3 3" />
                 <XAxis dataKey="date" tickFormatter={(value: string) => value.slice(8, 10)} />
                 <YAxis />
                 <Tooltip content={<EvolutionTooltip />} />
@@ -129,22 +135,25 @@ export function FinancialEvolutionChart({ data }: { data: DashboardResult['evolu
                   type="linear"
                   dataKey="revenueNumber"
                   name="Receita"
-                  stroke="#177245"
+                  stroke="var(--brand-700)"
                   strokeWidth={2}
+                  isAnimationActive={false}
                 />
                 <Line
                   type="linear"
                   dataKey="expensesNumber"
                   name="Despesas"
-                  stroke="#b45309"
+                  stroke="var(--expense)"
                   strokeWidth={2}
+                  isAnimationActive={false}
                 />
                 <Line
                   type="linear"
                   dataKey="profitNumber"
                   name="Lucro"
-                  stroke="#2563a8"
+                  stroke="#2f6f8f"
                   strokeWidth={2}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ResponsiveContainer>

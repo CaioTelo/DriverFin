@@ -37,12 +37,19 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       {mode === 'register' && (
         <label>
           Nome
-          <input name="name" autoComplete="name" required maxLength={100} />
+          <input name="name" autoComplete="name" required maxLength={100} placeholder="Seu nome" />
         </label>
       )}
       <label>
         E-mail
-        <input name="email" type="email" autoComplete="email" required maxLength={254} />
+        <input
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          maxLength={254}
+          placeholder="seu@email.com"
+        />
       </label>
       <label>
         Senha
@@ -53,6 +60,7 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
           required
           minLength={8}
           maxLength={128}
+          placeholder={mode === 'login' ? 'Sua senha' : 'Mínimo de 8 caracteres'}
         />
       </label>
       {error && (
